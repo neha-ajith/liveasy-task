@@ -1,8 +1,10 @@
 // ignore_for_file: prefer_const_constructors, sort_child_properties_last
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:otp_verification/globals.dart';
 import 'package:otp_verification/otp.dart';
+import 'package:otp_verification/select_profile.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -12,6 +14,40 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _phoneController = TextEditingController();
+  Future registerUser(String mobile, BuildContext context) async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    auth.verifyPhoneNumber(
+        phoneNumber: mobile,
+        timeout: Duration(seconds: 60),
+        verificationCompleted: (AuthCredential authCredential) {
+          auth
+              .signInWithCredential(authCredential)
+              .then((UserCredential result) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => SelectProfile()));
+          }).catchError((e) {
+            print(e);
+          });
+        },
+        verificationFailed: (FirebaseAuthException authException) {
+          print(authException.message);
+        },
+        codeSent: (String verificationId, int? forceResendingToken) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      Verification(verificationId: verificationId)));
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          verificationId = verificationId;
+          print(verificationId);
+          print("Timout");
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,6 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(width: 10),
                           Expanded(
                             child: TextField(
+                              controller: _phoneController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                   border: InputBorder.none,
@@ -84,10 +121,12 @@ class _LoginPageState extends State<LoginPage> {
                       backgroundColor:
                           MaterialStateProperty.all(Color(0xff2E3B62))),
                   onPressed: (() {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Verification()),
-                    );
+                    final mobile = "+91${_phoneController.text.trim()}";
+                    registerUser(mobile, context);
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => Verification()),
+                    // );
                   }),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),

@@ -30,9 +30,15 @@ class _SelectProfileState extends State<SelectProfile> {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Text("Please select your profile", style: titleStyle),
             SizedBox(height: 20),
-            ProfileRadio(),
+            ProfileRadio(
+              value: "shipper",
+              title: "Shipper",
+            ),
             SizedBox(height: 30),
-            ProfileRadio(),
+            ProfileRadio(
+              value: "transporter",
+              title: "Transporter",
+            ),
             SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
@@ -59,8 +65,10 @@ class _SelectProfileState extends State<SelectProfile> {
 }
 
 class ProfileRadio extends StatefulWidget {
-  final value;
-  const ProfileRadio({Key? key, this.value}) : super(key: key);
+  final dynamic value;
+  final String title;
+  const ProfileRadio({Key? key, required this.value, required this.title})
+      : super(key: key);
 
   @override
   State<ProfileRadio> createState() => _ProfileRadioState();
@@ -77,8 +85,7 @@ class _ProfileRadioState extends State<ProfileRadio> {
         children: [
           Radio(
             fillColor: MaterialStateColor.resolveWith((states) => Colors.black),
-            value: "shipper",
-            // value: widget.value,
+            value: "${widget.value}",
             groupValue: profile,
             onChanged: (value) {
               setState(() {
@@ -86,13 +93,13 @@ class _ProfileRadioState extends State<ProfileRadio> {
               });
             },
           ),
-          Image.asset("assets/shipper.png"),
+          Image.asset("assets/${widget.value}.png"),
           SizedBox(width: 30),
           Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Shipper", style: titleStyle),
+                Text(widget.title, style: titleStyle),
                 SizedBox(height: 10),
                 SizedBox(
                   width: 200,

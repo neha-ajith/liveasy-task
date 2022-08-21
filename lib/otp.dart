@@ -1,18 +1,22 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:otp_verification/globals.dart';
 import 'package:otp_verification/select_profile.dart';
 
 class Verification extends StatefulWidget {
-  const Verification({Key? key}) : super(key: key);
+  final String verificationId;
+  const Verification({Key? key, required this.verificationId})
+      : super(key: key);
 
   @override
   State<Verification> createState() => _VerificationState();
 }
 
 class _VerificationState extends State<Verification> {
+  late String code;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,14 +49,7 @@ class _VerificationState extends State<Verification> {
             borderWidth: 0,
             showFieldAsBox: true,
             onSubmit: (String verificationCode) {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text("Verification Code"),
-                      content: Text('Code entered is $verificationCode'),
-                    );
-                  });
+              code = verificationCode;
             },
           ),
           Row(
@@ -79,10 +76,34 @@ class _VerificationState extends State<Verification> {
                       backgroundColor:
                           MaterialStateProperty.all(Color(0xff2E3B62))),
                   onPressed: (() {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SelectProfile()),
-                    );
+                    FirebaseAuth auth = FirebaseAuth.instance;
+
+                    var smsCode = code.trim();
+
+                    AuthCredential credential = PhoneAuthProvider.credential(
+                        verificationId: widget.verificationId,
+                        smsCode: smsCode);
+                    auth
+                        .signInWithCredential(credential)
+                        .then((UserCredential result) {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SelectProfile()));
+                    }).catchError((e) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Invalid code!!"),
+                        ),
+                      );
+                      print(e);
+                    });
+
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => SelectProfile()),
+                    // );
                   }),
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
